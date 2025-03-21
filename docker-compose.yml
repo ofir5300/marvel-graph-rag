@@ -1,0 +1,17 @@
+version: '3'
+services:
+  neo4j:
+    image: neo4j:latest
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+    volumes:
+      - ./neo4j-docker/data:/data
+      - ./neo4j-docker/logs:/logs
+      - ./neo4j-docker/import:/import
+      - ./neo4j-docker/plugins:/plugins
