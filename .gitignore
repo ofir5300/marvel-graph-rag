@@ -1,5 +1,25 @@
 *.pdf 
 .DS_Store
 .env
+__pycache__/
+launch.json
+*.csv
+*.json
+*.xlsx
+*.parquet
+*.pkl
+*.log
+*.db.*
+*.db
+# Neo4j data and runtime files
 neo4j-docker/data/
+neo4j-docker/databases/
+neo4j-docker/dbms/
 neo4j-docker/logs/
+neo4j-docker/transactions/
+neo4j-docker/debug.log
+neo4j-docker/server_id
+#  should NOT ignore these:
+# neo4j-docker/conf/      # Configuration files
+# neo4j-docker/import/    # Data import files
+# neo4j-docker/plugins/   # Custom plugins
