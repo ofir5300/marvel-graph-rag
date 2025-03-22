@@ -1,0 +1,72 @@
+[
+	{
+		"name": "Wolverine",
+		"team": "X-Men",
+		"gene": "Mutant X-Gene",
+		"power": "Regeneration",
+		"description": "Wolverine (Logan) is a mutant with an accelerated healing factor and adamantium claws. Member of the X-Men."
+	},
+	{
+		"name": "Cyclops",
+		"team": "X-Men",
+		"gene": "Mutant X-Gene",
+		"power": "Optic Blast",
+		"description": "Cyclops (Scott Summers) can emit powerful optic blasts from his eyes. Leader of the X-Men."
+	},
+	{
+		"name": "Storm",
+		"team": "X-Men",
+		"gene": "Mutant X-Gene",
+		"power": "Weather Control",
+		"description": "Storm (Ororo Munroe) has the power to manipulate weather. A key member of the X-Men."
+	},
+	{
+		"name": "Spider-Man",
+		"team": "Avengers",
+		"gene": "Spider-Toxin Mutation",
+		"power": "Spider-Sense and Wall-Crawling",
+		"description": "Spider-Man (Peter Parker) gained spider-like abilities from a bite. Active member of the Avengers."
+	},
+	{
+		"name": "Iron Man",
+		"team": "Avengers",
+		"gene": "None",
+		"power": "Powered Armor Suit",
+		"description": "Iron Man (Tony Stark) uses his advanced armor suit to fight evil. A prominent Avengers member."
+	},
+	{
+		"name": "Captain America",
+		"team": "Avengers",
+		"gene": "Super-Soldier Serum",
+		"power": "Enhanced Strength and Agility",
+		"description": "Captain America (Steve Rogers) was boosted to peak human performance by a serum. Leader of the Avengers."
+	},
+	{
+		"name": "Hulk",
+		"team": "Avengers",
+		"gene": "Gamma Mutation",
+		"power": "Super Strength",
+		"description": "Hulk (Bruce Banner) transforms into a green powerhouse after gamma exposure. Core member of the Avengers."
+	},
+	{
+		"name": "Black Panther",
+		"team": "Avengers",
+		"gene": "Enhanced Panther Gene",
+		"power": "Enhanced Senses and Agility",
+		"description": "Black Panther (T'Challa) has enhanced abilities from a rare herb. Ruler of Wakanda and Avengers member."
+	},
+	{
+		"name": "Doctor Strange",
+		"team": "Avengers",
+		"gene": "None",
+		"power": "Mystic Arts",
+		"description": "Doctor Strange (Stephen Strange) is the Sorcerer Supreme, mastering mystical powers. A vital Avengers asset."
+	},
+	{
+		"name": "Daredevil",
+		"team": "Defenders",
+		"gene": "None",
+		"power": "Enhanced Senses",
+		"description": "Daredevil (Matt Murdock) was blinded but gained extraordinary senses. Fights crime in Hell's Kitchen."
+	}
+]

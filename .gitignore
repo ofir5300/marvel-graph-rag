@@ -4,7 +4,6 @@
 __pycache__/
 launch.json
 *.csv
-*.json
 *.xlsx
 *.parquet
 *.pkl
