@@ -1,33 +1,22 @@
-from typing import Annotated
+from typing import Annotated, Sequence
 from typing_extensions import TypedDict
-from langchain_openai import OpenAI
-from langchain.agents import initialize_agent, AgentType
+
+from IPython.display import Image, display
+
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langchain.tools import Tool
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
-from IPython.display import Image, display
+from langgraph.prebuilt import create_react_agent
+
+from dal.graph_generator import query_character
 
 
 class State(TypedDict):
-    # Messages have the type "list". The `add_messages` function
-    # in the annotation defines how this state key should be updated
-    # (in this case, it appends messages to the list, rather than overwriting them)
-    messages: Annotated[list, add_messages]
-
-
-def query_agent(state: State): # -> State["messages"]:
-    llm = OpenAI(temperature=0)
-    tools = [
-        Tool(
-            name="DummyTool",
-            func=lambda x: "This is a dummy tool response.",
-            description="A dummy tool to satisfy LangChain agent tool requirement."
-        )
-    ]
-    agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
-    return {"messages": [agent.invoke(state["messages"])]}
-    # return agent.invoke({"question": question})
+    messages: Annotated[Sequence[BaseMessage], add_messages]
 
 def draw_graph(graph: CompiledStateGraph):
     try:
@@ -38,7 +27,7 @@ def draw_graph(graph: CompiledStateGraph):
         pass
 
 def build_graph():
-    uncompiled_state_graph = StateGraph(query_agent)
+    uncompiled_state_graph = StateGraph(State)
     uncompiled_state_graph.add_node("query_agent", query_agent)
     uncompiled_state_graph.add_edge(START, "query_agent")
     uncompiled_state_graph.add_edge("query_agent", END)
@@ -46,7 +35,32 @@ def build_graph():
     draw_graph(graph)
     return graph
 
+
+def query_agent(state: State):
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    tools = [
+        Tool(
+            name="knowledge_graph_retriever",
+            func=lambda character: query_character(character),
+            description="Retrieve relevant data about a character and its connections from the knowledge graph."
+        )
+    ]
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an agent responsible for querying and retrieving data. You can call tool knowledge_graph_retriever to retrieve data about a character and its connections from the knowledge graph."),
+        MessagesPlaceholder(variable_name="messages")
+    ])
+    
+    agent = create_react_agent(model=llm, tools=tools,  prompt=prompt,debug=True)
+    result = agent.invoke(state)
+    content = result.get("messages", [])[-1].content if result and result.get("messages") else "No response generated"
+    return {"messages": [AIMessage(content=str(content))]}
+
+
 def call(question: str):
-    graph = build_graph()
-    result = graph.invoke({"messages": [{"role": "user", "content": question}]})
-    print(result)
+    try:    
+        graph = build_graph()
+        result = graph.invoke({"messages": [HumanMessage(content=question)]})
+        print(result)
+    except Exception as e:
+        print(e)
+    return result or "No result"

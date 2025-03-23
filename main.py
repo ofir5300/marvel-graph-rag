@@ -6,10 +6,8 @@ load_dotenv()
 
 def main():
     generate_knowledge_graph()
-    
-    # todo make this work:
     print(query_character("Spider-Man"))
-    call("What is the capital of France?")
+    call("spider-man")
 
 if __name__ == "__main__":
     main() 
