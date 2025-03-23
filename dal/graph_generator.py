@@ -1,13 +1,10 @@
 import os, json, re
+
 from neo4j import GraphDatabase
 from typing import List, Dict, Any
 
-class DataEntry:
-    def __init__(self, character, team, genes, powers):
-        self.character = character
-        self.team = team
-        self.genes = genes
-        self.powers = powers
+from models.types import DataEntry
+
 
 class Neo4jService:
     def __init__(self):
@@ -21,64 +18,40 @@ class Neo4jService:
     def close(self):
         self.driver.close()
     
-    def create_graph(self, data):
-
-
+    def create_graph(self, data: List[DataEntry]):
         with self.driver.session() as session:
             for entry in data:
                 self._process_entry(session, entry)
-            
             self._verify_graph(session)
     
-    def _process_entry(self, session, entry):
+    def _process_entry(self, session, entry: DataEntry):
         query = """
-        // Merge Character node
-        MERGE (character:Character {name: $character.name})
-        SET character.realName = $character.realName
-        
-        // Merge Team node
-        MERGE (team:Team {name: $team.name})
-        
-        // Create Character-Team relationship
+        MERGE (character:Character {name: $character})
+        MERGE (team:Team {name: $team})
         MERGE (character)-[:MEMBER_OF]->(team)
-        
-        // Process Genes
-        WITH character, team
-        UNWIND $genes AS geneData
-        MERGE (gene:Gene {name: geneData.name})
-        MERGE (character)-[:HAS_GENE]->(gene)
-        
-        // Process Powers
-        WITH character, team
-        UNWIND $powers AS powerData
-        MERGE (power:Power {name: powerData.name})
-        MERGE (character)-[:HAS_POWER]->(power)
-        
-        // Link Genes to Powers (simplified - in reality this might be more complex)
-        WITH character, team
-        MATCH (character)-[:HAS_GENE]->(gene)
-        MATCH (character)-[:HAS_POWER]->(power)
-        MERGE (gene)-[:ENABLES]->(power)
-        
-        RETURN character.name AS Character, team.name AS Team, 
-               collect(DISTINCT gene.name) AS Genes, 
-               collect(DISTINCT power.name) AS Powers
+
+        MERGE (gene:Gene {name: $gene})
+        MERGE (character)-[:HAS_MUTATION]->(gene)
+
+        MERGE (power:Power {name: $power})
+        MERGE (character)-[:POSSESSES_POWER]->(power)
+
+        MERGE (gene)-[:CONFERS]->(power)
+
+        RETURN character.name AS Character, team.name AS Team, gene.name AS Gene, power.name AS Power
         """
         
         result = session.run(
             query,
             character=entry.character,
             team=entry.team,
-            genes=entry.genes,
-            powers=entry.powers
+            gene=entry.gene,
+            power=entry.power
         )
         
-        print(f"Processed {entry.character['name']}:")
+        print(f"Processed")
         for record in result:
-            print(f"Character: {record['Character']}")
-            print(f"Team: {record['Team']}")
-            print(f"Genes: {', '.join(record['Genes'])}")
-            print(f"Powers: {', '.join(record['Powers'])}")
+            print(f"Character: {record['Character']}. Team: {record['Team']}")
             print("---")
     
     def _verify_graph(self, session):
@@ -96,28 +69,40 @@ class Neo4jService:
         
         # Test query 2: Find powers by gene
         gene_result = session.run("""
-            MATCH (gene:Gene)-[:ENABLES]->(power:Power)
-            RETURN gene.name AS Gene, collect(power.name) AS Powers
+            MATCH (gene:Gene)-[:CONFERS]->(power:Power)
+            RETURN gene.name AS Gene, power.name AS Power
         """)
         
         print("\nGenes and their Powers:")
         for record in gene_result:
-            print(f"{record['Gene']}: {', '.join(record['Powers'])}")
+            print(f"{record['Gene']}: {record['Power']}")
+
+    def query_character(self, name: str):
+        query = f"""
+        MATCH (char:Character {{name: '{name}'}})
+        OPTIONAL MATCH (char)-[:POSSESSES_POWER]->(power:Power)
+        OPTIONAL MATCH (char)-[:HAS_MUTATION]->(gene:Gene)
+        OPTIONAL MATCH (char)-[:MEMBER_OF]->(team:Team)
+        OPTIONAL MATCH (teamate: Character)-[:MEMBER_OF]->(team)
+        where teamate.name <> char.name
+        return char.name as Character, power.name as Power, gene.name as Gene, team.name as Team,
+         collect (teamate.name) as TeamMembers
+        """
+        result = self.driver.session().run(query, name=name)
+        return result.single()
 
 
 
-def load_json_data(file_path):
+def load_json_data(file_path: str) -> List[DataEntry]:
     with open(file_path, 'r') as f:
         json_data = json.load(f)
     entries = []
     for item in json_data:
-        match = re.search(r'\((.*?)\)', item.get('description', ''))    # TODO ?
-        realName = match.group(1) if match else item['name']
         entries.append(DataEntry(
-            character={"name": item["name"], "realName": realName},
-            team={"name": item["team"]},
-            genes=[{"name": item["gene"]}] if item["gene"].lower() != "none" else [],
-            powers=[{"name": item["power"]}] if item["power"].lower() != "none" else []
+            character=item["name"].lower(),
+            team=item["team"].lower(),
+            gene=item["gene"].lower(),
+            power=item["power"].lower()
         ))
     return entries
 
@@ -131,3 +116,7 @@ def generate_knowledge_graph():
         print(f"Failed to create graph: {e}")
     finally:
         service.close()
+
+def query_character(name: str):
+    service = Neo4jService()
+    return service.query_character(name.lower())

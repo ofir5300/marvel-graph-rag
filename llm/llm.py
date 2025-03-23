@@ -34,7 +34,7 @@ def draw_graph(graph: CompiledStateGraph):
         png_data = graph.get_graph().draw_mermaid_png()
         with open("llm_graph.png", "wb") as f:
             f.write(png_data)  
-    except Exception as e:
+    except Exception:
         pass
 
 def build_graph():
@@ -48,5 +48,5 @@ def build_graph():
 
 def call(question: str):
     graph = build_graph()
-    result = graph.invoke({"question": question})
+    result = graph.invoke({"messages": [{"role": "user", "content": question}]})
     print(result)
