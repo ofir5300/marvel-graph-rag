@@ -27,6 +27,8 @@ certifi==2025.1.31
     #   requests
 charset-normalizer==3.4.1
     # via requests
+coloredlogs==15.0.1
+    # via redisvl
 dataclasses-json==0.6.7
     # via langchain-community
 decorator==5.2.1
@@ -50,6 +52,8 @@ httpx==0.28.1
     #   openai
 httpx-sse==0.4.0
     # via langchain-community
+humanfriendly==10.0
+    # via coloredlogs
 idna==3.10
     # via
     #   anyio
@@ -62,6 +66,8 @@ ipython-pygments-lexers==1.1.1
     # via ipython
 jedi==0.19.2
     # via ipython
+jinja2==3.1.6
+    # via langchain-redis
 jiter==0.9.0
     # via openai
 jsonpatch==1.33
@@ -80,11 +86,14 @@ langchain-core==0.3.47
     #   langchain
     #   langchain-community
     #   langchain-openai
+    #   langchain-redis
     #   langchain-text-splitters
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
 langchain-openai==0.3.9
+    # via -r requirements.in
+langchain-redis==0.2.0
     # via -r requirements.in
 langchain-text-splitters==0.3.7
     # via langchain
@@ -104,10 +113,14 @@ langsmith==0.3.18
     #   langchain
     #   langchain-community
     #   langchain-core
+markupsafe==3.0.2
+    # via jinja2
 marshmallow==3.26.1
     # via dataclasses-json
 matplotlib-inline==0.1.7
     # via ipython
+ml-dtypes==0.4.1
+    # via redisvl
 msgpack==1.1.0
     # via langgraph-checkpoint
 multidict==6.2.0
@@ -118,8 +131,13 @@ mypy-extensions==1.0.0
     # via typing-inspect
 neo4j==5.28.1
     # via -r requirements.in
-numpy==2.2.4
-    # via langchain-community
+numpy==1.26.4
+    # via
+    #   -r requirements.in
+    #   langchain-community
+    #   langchain-redis
+    #   ml-dtypes
+    #   redisvl
 openai==1.68.2
     # via langchain-openai
 orjson==3.10.15
@@ -152,6 +170,7 @@ pydantic==2.10.6
     #   langsmith
     #   openai
     #   pydantic-settings
+    #   redisvl
 pydantic-core==2.27.2
     # via pydantic
 pydantic-settings==2.8.1
@@ -164,6 +183,10 @@ python-dotenv==1.0.1
     # via
     #   -r requirements.in
     #   pydantic-settings
+python-ulid==3.0.0
+    # via
+    #   langchain-redis
+    #   redisvl
 pytz==2025.1
     # via
     #   -r requirements.in
@@ -173,6 +196,13 @@ pyyaml==6.0.2
     #   langchain
     #   langchain-community
     #   langchain-core
+    #   redisvl
+redis==5.2.1
+    # via
+    #   -r requirements.in
+    #   redisvl
+redisvl==0.4.1
+    # via langchain-redis
 regex==2024.11.6
     # via tiktoken
 requests==2.32.3
@@ -194,10 +224,13 @@ sqlalchemy==2.0.39
     #   langchain-community
 stack-data==0.6.3
     # via ipython
+tabulate==0.9.0
+    # via redisvl
 tenacity==9.0.0
     # via
     #   langchain-community
     #   langchain-core
+    #   redisvl
 tiktoken==0.9.0
     # via langchain-openai
 tqdm==4.67.1

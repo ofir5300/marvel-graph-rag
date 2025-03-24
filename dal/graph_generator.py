@@ -1,9 +1,9 @@
-import os, json, re
+import os
 
 from neo4j import GraphDatabase
-from typing import List, Dict, Any
+from typing import List
 
-from models.types import DataEntry
+from models.types import RelationalDataEntry
 
 
 class Neo4jService:
@@ -18,13 +18,13 @@ class Neo4jService:
     def close(self):
         self.driver.close()
     
-    def create_graph(self, data: List[DataEntry]):
+    def create_graph(self, data: List[RelationalDataEntry]):
         with self.driver.session() as session:
             for entry in data:
                 self._process_entry(session, entry)
             self._verify_graph(session)
     
-    def _process_entry(self, session, entry: DataEntry):
+    def _process_entry(self, session, entry: RelationalDataEntry):
         query = """
         MERGE (character:Character {name: $character})
         MERGE (team:Team {name: $team})
@@ -124,33 +124,3 @@ class Neo4jService:
         result = self.driver.session().run(query, name=name)
         return result.single()
 #  TODO query each type of node?
-
-
-
-def load_json_data(file_path: str) -> List[DataEntry]:
-    with open(file_path, 'r') as f:
-        json_data = json.load(f)
-    entries = []
-    for item in json_data:
-        entries.append(DataEntry(
-            character=item["name"].lower(),
-            team=item["team"].lower(),
-            gene=item["gene"].lower(),
-            power=item["power"].lower()
-        ))
-    return entries
-
-
-def generate_knowledge_graph():
-    service = Neo4jService()
-    try:
-        service.create_graph(load_json_data("models/marvel.json"))
-        print("Graph creation completed")
-    except Exception as e:
-        print(f"Failed to create graph: {e}")
-    finally:
-        service.close()
-
-def query_character(name: str):
-    service = Neo4jService()
-    return service.query_character(name.lower(), include_mutual=True)
