@@ -35,10 +35,4 @@ class RedisService:
         self.delete_index()
         self.create_index()
 
-#  TODO should remove?
-
-def test_embedder():
-    embedder = Embedder()
-    embedder.bulk_embed(["Hello, world!", "This is a test.", "the most important this is the world is tupac"])
-    res = embedder.query_similar("what is the most important thing?")
-    print(res)
+#  TODO Implement caching

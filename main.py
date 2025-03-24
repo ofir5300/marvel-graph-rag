@@ -6,11 +6,9 @@ from app.service import app
 
 load_dotenv()
 run_all_ETLs()
-#  TODO check
 
 def main():
     # RedisService().reset_index()
-    # call("who is welveri") #  TODO make it sucess
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 

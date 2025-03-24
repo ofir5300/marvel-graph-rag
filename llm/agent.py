@@ -33,8 +33,10 @@ def planner_agent(llm: ChatOpenAI, state: State)-> State:
     characters: List[str] = runnable.invoke(state)
     
     sender_is_relations = state.get("sender") == AgentName.RELATIONS.value
-    new_charcters_detected = characters is not None and state.get("characters") is not None and not all(char in characters for char in state.get("characters"))
-    if sender_is_relations or new_charcters_detected:
+    first_character_detection = characters is not None and state.get("characters") is None
+    new_characters_detected = characters is not None and state.get("characters") is not None and not all(char in characters for char in state.get("characters"))
+    delta_in_charcters = first_character_detection or new_characters_detected
+    if sender_is_relations or delta_in_charcters:
         handoff = "information"
     elif len(state["messages"]) >=3: # both agents have already answered
         handoff = "resolver"

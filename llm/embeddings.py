@@ -33,3 +33,8 @@ class Embedder:
         metadatas = [{"id": doc_id} for doc_id in doc_ids]
         res = self.vectorstore.add_texts(texts, metadatas=metadatas)
         print(res)
+
+    def test_embedder(self):
+        self.bulk_embed(["Hello, world!", "This is a test.", "the most important character in the world is tupac"])
+        res = self.query_similar("who is the most important?")
+        print(res)
