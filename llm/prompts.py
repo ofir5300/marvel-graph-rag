@@ -12,7 +12,6 @@ Given a query, or messages from other agents you should detect whether the query
 If the query is about a character, you should alway detect the character name and handoff the query to the 'information' agent.
 Else, you should handoff the query to the 'relations' agent.
 """
-#  TODO if the relations agent already answered the question you should check whther its answer includes other characters
 
 RELATIONS_PROMPT = f"""
 {MAIN_SYSTEM_PROMPT}

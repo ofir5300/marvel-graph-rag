@@ -1,3 +1,4 @@
+from email import message
 from functools import partial
 from typing import List
 from langchain_openai import ChatOpenAI
@@ -8,7 +9,7 @@ from langchain.tools import StructuredTool
 
 from llm.prompts import INFORMATION_PROMPT, PLANNER_PROMPT, RELATIONS_PROMPT, RESOLVER_PROMPT
 from llm.shared import AgentName, State, extract_content_from_state, get_prompt_template
-from llm.tools import create_characters_detection_tool, create_embeddings_tool, create_knowledge_graph_tool
+from llm.tools import create_characters_detection_tool, create_embeddings_tool, create_knowledge_graph_character_tool, create_knowledge_graph_team_tool, create_knowledge_graph_gene_tool, create_knowledge_graph_power_tool
 
 def retriever_agent(llm: ChatOpenAI, agent_name: AgentName, tools: List[StructuredTool], promptStr: str, state: State):
     prompt = get_prompt_template(promptStr)
@@ -33,25 +34,31 @@ def planner_agent(llm: ChatOpenAI, state: State)-> State:
     characters: List[str] = runnable.invoke(state)
     
     sender_is_relations = state.get("sender") == AgentName.RELATIONS.value
+    sender_is_information = state.get("sender") == AgentName.INFORMATION.value
     first_character_detection = characters is not None and state.get("characters") is None
-    new_characters_detected = characters is not None and state.get("characters") is not None and not all(char in characters for char in state.get("characters"))
+    existing_characters = state.get("characters", [])
+    all_characters = set([c.lower() for c in (existing_characters + characters)])
+    new_characters_detected = len(state.get("characters", [])) <  len(all_characters)
     delta_in_charcters = first_character_detection or new_characters_detected
-    if sender_is_relations or delta_in_charcters:
+    if sender_is_information and len(state["messages"]) <=2:
+        handoff = "relations"
+    elif sender_is_relations or delta_in_charcters:
         handoff = "information"
     elif len(state["messages"]) >=3: # both agents have already answered
         handoff = "resolver"
     else:
         handoff = "relations"
 
-    print(f"Agent: {AgentName.PLANNER.value} - characters: {characters} - next: {handoff}")
-    return {"characters": characters,"sender": AgentName.PLANNER.value,"handoff": handoff}
+    print(f"Agent: {AgentName.PLANNER.value} - characters: {all_characters} - next: {handoff}")
+    return {"characters": list(all_characters), "sender": AgentName.PLANNER.value, "handoff": handoff}
 
 
 def create_agent(llm: ChatOpenAI, agent_name: AgentName):
     if agent_name.value == AgentName.PLANNER.value:
         return partial(planner_agent, llm)
     elif agent_name.value == AgentName.RELATIONS.value:
-        return partial(retriever_agent, llm, agent_name, [create_knowledge_graph_tool()], RELATIONS_PROMPT)
+        tools = [create_knowledge_graph_character_tool(), create_knowledge_graph_team_tool(), create_knowledge_graph_gene_tool(), create_knowledge_graph_power_tool()]
+        return partial(retriever_agent, llm, agent_name, tools, RELATIONS_PROMPT)
     elif agent_name.value == AgentName.INFORMATION.value:
         return partial(retriever_agent, llm, agent_name, [create_embeddings_tool()], INFORMATION_PROMPT)
     elif agent_name.value == AgentName.RESOLVER.value:

@@ -9,15 +9,14 @@ app = FastAPI(title="Marvel Knowledge Graph API")
 
 class Question(BaseModel):
     text: str
-
-#  TODO ?
+    cache: bool = False
 
 class CharacterResponse(BaseModel):
     character: str
     powers: List[str]
     genes: List[str]
     team: Optional[str]
-    team_members: List[str]
+    common_connections: List[object]
 
 @app.post("/question")
 async def ask_question(question: Question):
@@ -34,13 +33,12 @@ async def get_character_info(character: str):
         if not result:
             raise HTTPException(status_code=404, detail=f"Character {character} not found")
         
-        #  TODO restructure response along with returned dat
         return CharacterResponse(
             character=result["Character"],
             powers=[p for p in result["Powers"] if p],
             genes=[g for g in result["Genes"] if g],
             team=result["Team"],
-            team_members=result["TeamMembers"] if "TeamMembers" in result else []
+            common_connections=result[4]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

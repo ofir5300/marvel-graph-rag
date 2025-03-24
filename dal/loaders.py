@@ -1,7 +1,7 @@
 import json
 from typing import List
 
-from dal.graph_generator import Neo4jService
+from dal.neo4j import Neo4jService
 from llm.embeddings import Embedder
 from models.types import InformationDataEntry, RelationalDataEntry
 

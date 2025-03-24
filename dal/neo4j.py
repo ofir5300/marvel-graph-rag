@@ -1,11 +1,7 @@
 import os
-
 from neo4j import GraphDatabase
 from typing import List
-
 from models.types import RelationalDataEntry
-
-
 class Neo4jService:
     def __init__(self):
         AUTH = (os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", ""))
@@ -32,12 +28,9 @@ class Neo4jService:
 
         MERGE (gene:Gene {name: $gene})
         MERGE (character)-[:HAS_MUTATION]->(gene)
-
         MERGE (power:Power {name: $power})
         MERGE (character)-[:POSSESSES_POWER]->(power)
-
         MERGE (gene)-[:CONFERS]->(power)
-
         RETURN character.name AS Character, team.name AS Team, gene.name AS Gene, power.name AS Power
         """
         
@@ -76,51 +69,68 @@ class Neo4jService:
         print("\nGenes and their Powers:")
         for record in gene_result:
             print(f"{record['Gene']}: {record['Power']}")
-
-#  TODO multiple genes and powers!
-#  TODO fix waringin onaggregation skips null values
-    def query_character(self, name: str, include_mutual: bool = False):
-        base_query = """
+    def query_character(self, name: str):
+        query = """
         MATCH (char:Character {name: $name})
         OPTIONAL MATCH (char)-[:POSSESSES_POWER]->(power:Power)
         OPTIONAL MATCH (char)-[:HAS_MUTATION]->(gene:Gene)
         OPTIONAL MATCH (char)-[:MEMBER_OF]->(team:Team)
+        WITH char, collect(power.name) as powers, collect(gene.name) as genes, team
+        OPTIONAL MATCH (char)-[relationship]-(shared)
+        WHERE shared IS NOT NULL
+        WITH char, powers, genes, team, shared
+        OPTIONAL MATCH (other:Character)-[relationship2]->(shared)
+        WHERE other.name <> char.name
+        WITH char, powers, genes, team, shared.name as sharedNode,
+             collect(DISTINCT other.name) as others
+        WHERE size(others) > 0
+        RETURN char.name as Character,
+               powers as Powers,
+               genes as Genes,
+               team.name as Team,
+               collect({shared: sharedNode, others: others}) as Connections
         """
-
-        if include_mutual:
-            query = base_query + """
-            WITH char, collect(power.name) as powers, collect(gene.name) as genes, team
-            OPTIONAL MATCH (char)-[relationship]-(shared)
-            WHERE shared IS NOT NULL
-            WITH char, powers, genes, team, shared
-            OPTIONAL MATCH (other:Character)-[relationship2]->(shared)
-            WHERE other.name <> char.name
-            WITH char, powers, genes, team, shared.name as sharedNode,
-                 collect(DISTINCT other.name) as others
-            WHERE size(others) > 0
-            RETURN char.name as Character,
-                   powers as Powers,
-                   genes as Genes,
-                   team.name as Team,
-                   collect({
-                       shared: sharedNode,
-                       others: others
-                   }) as mutualConnections
-            """
-        else:
-            query = base_query + """
-            RETURN char.name as Character,
-                   collect(power.name) as Powers,
-                   collect(gene.name) as Genes,
-                   team.name as Team
-            """
-            query = base_query + """
-            RETURN char.name as Character,
-                   collect(power.name) as Powers,
-                   collect(gene.name) as Genes,
-                   team.name as Team
-            """
-        
         result = self.driver.session().run(query, name=name)
         return result.single()
-#  TODO query each type of node?
+    
+    def query_power(self, name: str):
+        query = """
+        MATCH (power:Power {name: $name})
+        OPTIONAL MATCH (char:Character)-[:POSSESSES_POWER]->(power)
+        OPTIONAL MATCH (gene:Gene)-[:ENABLES]->(power)
+        WITH power, collect(char.name) as characters, collect(gene.name) as genes
+        RETURN power.name as Power,
+               characters as Characters,
+               genes as Genes
+        """
+        result = self.driver.session().run(query, name=name)
+        return result.single()
+    
+    def query_gene(self, name: str):
+        query = """
+        MATCH (gene:Gene {name: $name})
+        OPTIONAL MATCH (char:Character)-[:HAS_MUTATION]->(gene)
+        OPTIONAL MATCH (gene)-[:ENABLES]->(power:Power)
+        WITH gene, collect(char.name) as characters, collect(power.name) as powers
+        RETURN gene.name as Gene,
+               characters as Characters,
+               powers as Powers
+        """
+        result = self.driver.session().run(query, name=name)
+        return result.single()
+    
+    def query_team(self, name: str):
+        query = """
+        MATCH (team:Team {name: $name})
+        OPTIONAL MATCH (char:Character)-[:MEMBER_OF]->(team)
+        WITH team, collect(char.name) as members
+        OPTIONAL MATCH (char:Character)-[:MEMBER_OF]->(team)
+        OPTIONAL MATCH (char)-[:POSSESSES_POWER]->(power:Power)
+        OPTIONAL MATCH (char)-[:HAS_MUTATION]->(gene:Gene)
+        RETURN team.name as Team,
+               members as Members,
+               collect(DISTINCT power.name) as TeamPowers,
+               collect(DISTINCT gene.name) as TeamGenes
+        """
+        result = self.driver.session().run(query, name=name)
+        return result.single()
