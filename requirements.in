@@ -11,3 +11,5 @@ langchain-redis==0.2.0
 ipython==9.0.2
 redis==5.2.1
 numpy>=1.26.2,<2.0.0  # This version satisfies both langchain packages
+fastapi==0.115.4
+uvicorn==0.31.0

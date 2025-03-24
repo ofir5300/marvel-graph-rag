@@ -12,7 +12,7 @@ from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
 
-from dal.graph_generator import query_character
+from dal.query import query_character
 
 
 class State(TypedDict):

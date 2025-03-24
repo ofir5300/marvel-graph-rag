@@ -1,22 +1,20 @@
-from dal.redis import RedisService, test_embedder
-from dal.loaders import run_all_ETLs
 from dotenv import load_dotenv
+import uvicorn
 
-from llm.embeddings import Embedder
+from dal.loaders import run_all_ETLs
+from api.api import app
 
-load_dotenv()
 
-def main():
-    # generate_knowledge_graph()
+def init_system():
+    load_dotenv()
     # RedisService().reset_index()
     run_all_ETLs()
-    embedder = Embedder()
-    res = embedder.query_similar("welverin?")
-    print(res)
-    # test_embedder()
-    # character = query_character("Spider-Man")
-    # print(character)
     # call("who is welveri") #  TODO make it sucess
-    # call("tell me about spider guy")
+
+def main():
+    init_system()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
 if __name__ == "__main__":
     main() 

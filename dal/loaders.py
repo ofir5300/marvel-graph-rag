@@ -31,11 +31,6 @@ def extract_and_transform_information_data(file_path: str) -> List[InformationDa
         ))
     return entries
 
-def query_character(name: str):
-    service = Neo4jService()
-    return service.query_character(name.lower(), include_mutual=True)
-
-
 def generate_knowledge_graph():
     service = Neo4jService()
     try:
