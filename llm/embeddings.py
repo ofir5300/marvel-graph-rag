@@ -14,6 +14,7 @@ class Embedder:
         self.embedder = OpenAIEmbeddings(model="text-embedding-3-small")
         self.index = index
         config = RedisConfig(
+            redis_url=os.getenv("REDIS_URL"),
             index_name=index,
             distance_metric="COSINE"
         )

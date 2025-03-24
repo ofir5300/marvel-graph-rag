@@ -1,17 +1,52 @@
-version: '3'
+# docker-compose.yml
+version: "3.8"
+
 services:
-  neo4j:
-    image: neo4j:latest
+  api:
+    build: .
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  redis:
+    image: redis/redis-stack:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  neo4j:
+    image: neo4j:5.12.0
+    ports:
+      - "7474:7474" # HTTP
+      - "7687:7687" # Bolt
     environment:
-      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD}
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://neo4j:7474 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ./neo4j-docker/data:/data
-      - ./neo4j-docker/logs:/logs
-      - ./neo4j-docker/import:/import
-      - ./neo4j-docker/plugins:/plugins
+      - neo4j_data:/data
+    networks:
+      - app-network
+
+volumes:
+  neo4j_data:
+
+networks:
+  app-network:
+    driver: bridge
