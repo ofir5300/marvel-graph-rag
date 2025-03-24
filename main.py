@@ -5,9 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def main():
-    generate_knowledge_graph()
-    print(query_character("Spider-Man"))
-    call("spider-man")
+    # generate_knowledge_graph()
+    character = query_character("Spider-Man")
+    print(character)
+    # call("spider-man")
 
 if __name__ == "__main__":
     main() 

@@ -77,19 +77,53 @@ class Neo4jService:
         for record in gene_result:
             print(f"{record['Gene']}: {record['Power']}")
 
-    def query_character(self, name: str):
-        query = f"""
-        MATCH (char:Character {{name: '{name}'}})
+#  TODO multiple genes and powers!
+#  TODO fix waringin onaggregation skips null values
+    def query_character(self, name: str, include_mutual: bool = False):
+        base_query = """
+        MATCH (char:Character {name: $name})
         OPTIONAL MATCH (char)-[:POSSESSES_POWER]->(power:Power)
         OPTIONAL MATCH (char)-[:HAS_MUTATION]->(gene:Gene)
         OPTIONAL MATCH (char)-[:MEMBER_OF]->(team:Team)
-        OPTIONAL MATCH (teamate: Character)-[:MEMBER_OF]->(team)
-        where teamate.name <> char.name
-        return char.name as Character, power.name as Power, gene.name as Gene, team.name as Team,
-         collect (teamate.name) as TeamMembers
         """
+
+        if include_mutual:
+            query = base_query + """
+            WITH char, collect(power.name) as powers, collect(gene.name) as genes, team
+            OPTIONAL MATCH (char)-[relationship]-(shared)
+            WHERE shared IS NOT NULL
+            WITH char, powers, genes, team, shared
+            OPTIONAL MATCH (other:Character)-[relationship2]->(shared)
+            WHERE other.name <> char.name
+            WITH char, powers, genes, team, shared.name as sharedNode,
+                 collect(DISTINCT other.name) as others
+            WHERE size(others) > 0
+            RETURN char.name as Character,
+                   powers as Powers,
+                   genes as Genes,
+                   team.name as Team,
+                   collect({
+                       shared: sharedNode,
+                       others: others
+                   }) as mutualConnections
+            """
+        else:
+            query = base_query + """
+            RETURN char.name as Character,
+                   collect(power.name) as Powers,
+                   collect(gene.name) as Genes,
+                   team.name as Team
+            """
+            query = base_query + """
+            RETURN char.name as Character,
+                   collect(power.name) as Powers,
+                   collect(gene.name) as Genes,
+                   team.name as Team
+            """
+        
         result = self.driver.session().run(query, name=name)
         return result.single()
+#  TODO query each type of node?
 
 
 
@@ -119,4 +153,4 @@ def generate_knowledge_graph():
 
 def query_character(name: str):
     service = Neo4jService()
-    return service.query_character(name.lower())
+    return service.query_character(name.lower(), include_mutual=True)

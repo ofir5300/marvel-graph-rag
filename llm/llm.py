@@ -60,7 +60,9 @@ def call(question: str):
     try:    
         graph = build_graph()
         result = graph.invoke({"messages": [HumanMessage(content=question)]})
-        print(result)
+        answer = result['messages'][-1].content
+        print(f"\nAnswer: \n\n{answer}")
+        return answer 
     except Exception as e:
         print(e)
-    return result or "No result"
+        return "No result"
