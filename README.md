@@ -1,5 +1,10 @@
 # Marvel GraphRAG
 
+<div style="display: flex; justify-content: center;">
+  <img src="llm_graph.png" alt="Marvel GraphRAG Architecture" width="40%">
+  <img src="knowledge_graph.png" alt="Marvel Knowledge Graph" width="40%">
+</div>
+
 ## Development Setup
 
 ### Building and Running with Docker Compose
