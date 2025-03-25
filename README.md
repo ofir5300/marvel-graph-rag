@@ -1,4 +1,4 @@
-# Project Gene Forge
+# Marvel GraphRAG
 
 ## Development Setup
 

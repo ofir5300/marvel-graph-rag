@@ -1,4 +1,4 @@
-# Project Gene Forge
+# Marvel GraphRAG
 
 A knowledge graph-based AI system that combines structured relationship data with natural language understanding to analyze Marvel characters and their connections.
 
@@ -30,16 +30,19 @@ A knowledge graph-based AI system that combines structured relationship data wit
 I combined graph data with LLM capabilities by creating adapters that construct Cypher queries for different entity types (Character, Power, Gene, Team). These adapters are exposed as retrievers and connected to LangChain tools, which can be called by an agent to access both structured relationships from Neo4j and semantic context from Redis. This creates a bridge between structured graph data and natural language understanding.
 
 ### Query logic and prompt engineering
+
 Each agent (Planner, Relations, Informationm Resolver) in the flow has its own goal abd prompt. All share a defautl root prompt.
 The core intention us to have all agents collaborate on the task making sure that the query is being processed and used to retrieved both knowledge graph relations data and vector fb data.
 
 #### Unique case handling explained:
-Looking up a character with a typo - 
-* Planner agents detect a character name thus hanfoff to Inforamtion agent
-* Information agent uses similarity search on vector db thus can handle typo and will result with information about the actual caracter
-* Later Realtions agent will use the retrieved data from the Information agent thus now familiar with the actaul and correct character name
-* Relations agent fetches all connections from the knowledge graph
-* Resolver puts everythign together and answers
+
+Looking up a character with a typo -
+
+- Planner agents detect a character name thus hanfoff to Inforamtion agent
+- Information agent uses similarity search on vector db thus can handle typo and will result with information about the actual caracter
+- Later Realtions agent will use the retrieved data from the Information agent thus now familiar with the actaul and correct character name
+- Relations agent fetches all connections from the knowledge graph
+- Resolver puts everythign together and answers
 
 ## Missing Features & Future Improvements
 
